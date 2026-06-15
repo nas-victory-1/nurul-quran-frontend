@@ -6,7 +6,7 @@ import { Play, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useAppDispatch, useAppSelector } from "@/hooks";
-import { revealQuestion } from "@/store/contestSlice";
+import { startPicking, revealQuestion } from "@/store/contestSlice";
 import {
     useBroadcastContestantsMutation,
     useSaveContestStateMutation,
@@ -21,6 +21,7 @@ export default function ContestControl() {
         id: contestId,
         currentContestantId,
         currentQuestionIndex,
+        pickedContestants,
         questionsDict,
         contestantsDict,
         questionsPerContestant,
@@ -42,32 +43,14 @@ export default function ContestControl() {
     const handleRevealQuestion = async () => {
         if (!currentQuestion || contestId === null) return;
 
-        const questionString = `Question ${questionNumber} of ${questionsPerContestant}`;
+        const hasPicked = pickedContestants?.[currentContestantId];
 
-        // Update the judge's own screen immediately.
-        dispatch(revealQuestion(currentQuestion));
-
-        try {
-            // The backend re-broadcasts these over Socket.IO to the projector.
-            await Promise.all([
-                showCurrentPage({ page_url: currentQuestion.detail }).unwrap(),
-                broadcastContestants({
-                    contestantName: currentContestant,
-                    questionString,
-                }).unwrap(),
-                saveContestState({
-                    contestId: String(contestId),
-                    contestantName: currentContestant,
-                    pageNumber: currentQuestion.pageNumber,
-                    questionString,
-                }).unwrap(),
-            ]);
-        } catch {
-            toastMessage({
-                header: "Sync issue",
-                message: "Could not push the question to the projector.",
-                toastType: "error",
-            });
+        // If it's the contestant's first question and they haven't picked yet,
+        // open the picking UI. Otherwise reveal immediately.
+        if (currentQuestionIndex === 0 && !hasPicked) {
+            dispatch(startPicking());
+        } else {
+            dispatch(revealQuestion(currentQuestion));
         }
     };
 
@@ -172,15 +155,12 @@ export default function ContestControl() {
                         className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-lg font-semibold rounded-xl shadow-lg"
                     >
                         <Play className="w-6 h-6 mr-2" />
-                        Reveal Question {questionNumber} for {currentContestant}
+                        Reveal question for {currentContestant}
                     </Button>
                 </motion.div>
 
                 <div className="mt-6 text-center text-sm text-gray-500">
-                    <p>
-                        Click the button above to display the question on the
-                        projector
-                    </p>
+                    <p>Click the button above to reveal the question</p>
                 </div>
             </motion.div>
         </div>

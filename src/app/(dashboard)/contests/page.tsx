@@ -390,16 +390,8 @@ export default function ContestsPage() {
                                             ) : (
                                                 <Button
                                                     variant="outline"
-                                                    className="border-gray-300 text-gray-700 hover:bg-gray-100 w-full"
-                                                    onClick={() =>
-                                                        router.push(
-                                                            `/contest-results?id=${contest.id}`,
-                                                        )
-                                                    }
-                                                >
-                                                    <ChevronRight className="w-4 h-4 mr-2" />
-                                                    View Results
-                                                </Button>
+                                                    className="hidden"
+                                                ></Button>
                                             )}
                                         </div>
                                     </div>
