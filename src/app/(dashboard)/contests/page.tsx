@@ -20,6 +20,7 @@ import {
     ChevronRight,
     Clock,
     Filter,
+    Trash2,
     Play,
     Plus,
     Search,
@@ -33,6 +34,7 @@ import { Badge } from "@/components/ui/badge";
 import {
     useGetContestsQuery,
     useLazyGetContestDataQuery,
+    useDeleteContestMutation,
 } from "@/services/contestApi";
 import { useAppDispatch } from "@/hooks";
 import { setContestData } from "@/store/contestSlice";
@@ -51,6 +53,8 @@ export default function ContestsPage() {
     const { data, isLoading, error } = useGetContestsQuery();
     const [getContestData, { isFetching: isLoadingContest }] =
         useLazyGetContestDataQuery();
+    const [deleteContest, { isLoading: isDeletingContest }] =
+        useDeleteContestMutation();
 
     const contests = mapContests(data?.contests ?? []);
 
@@ -65,6 +69,32 @@ export default function ContestsPage() {
             toastMessage({
                 header: "Could not start contest",
                 message: "Failed to load contest data. Please try again.",
+                toastType: "error",
+            });
+        }
+    };
+
+    const handleDeleteContest = async (
+        contestId: number,
+        contestName: string,
+    ) => {
+        const confirmed = window.confirm(
+            `Delete ${contestName}? This will permanently remove the contest, contestants, and generated questions.`,
+        );
+
+        if (!confirmed) return;
+
+        try {
+            await deleteContest({ contestId: String(contestId) }).unwrap();
+            toastMessage({
+                header: "Contest deleted",
+                message: `${contestName} was removed successfully.`,
+                toastType: "success",
+            });
+        } catch {
+            toastMessage({
+                header: "Could not delete contest",
+                message: "Please try again.",
                 toastType: "error",
             });
         }
@@ -246,6 +276,21 @@ export default function ContestsPage() {
                                         <Play className="w-5 h-5 mr-2" />
                                         Start This Contest Now
                                     </Button>
+                                    <Button
+                                        onClick={() =>
+                                            handleDeleteContest(
+                                                nearestUpcomingContest.id,
+                                                nearestUpcomingContest.name,
+                                            )
+                                        }
+                                        disabled={isDeletingContest}
+                                        variant="outline"
+                                        className="mt-3 ml-5 border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+                                        size="lg"
+                                    >
+                                        <Trash2 className="w-5 h-5 mr-2" />
+                                        Delete Contest
+                                    </Button>
                                 </div>
 
                                 <div className="md:block md:w-1/3 bg-emerald-900 p-8 flex items-center justify-center">
@@ -375,7 +420,7 @@ export default function ContestsPage() {
                                             </div>
                                         </div>
 
-                                        <div className="bg-gray-50 p-6 md:w-1/5 flex items-center justify-center border-t md:border-t-0 md:border-l border-gray-100">
+                                        <div className="bg-gray-50 p-6 md:w-1/5 flex flex-col items-center justify-center gap-3 border-t md:border-t-0 md:border-l border-gray-100">
                                             {isUpcoming ? (
                                                 <Button
                                                     onClick={() =>
@@ -387,12 +432,21 @@ export default function ContestsPage() {
                                                     <Play className="w-4 h-4 mr-2" />
                                                     Start Contest
                                                 </Button>
-                                            ) : (
-                                                <Button
-                                                    variant="outline"
-                                                    className="hidden"
-                                                ></Button>
-                                            )}
+                                            ) : null}
+                                            <Button
+                                                variant="outline"
+                                                onClick={() =>
+                                                    handleDeleteContest(
+                                                        contest.id,
+                                                        contest.name,
+                                                    )
+                                                }
+                                                disabled={isDeletingContest}
+                                                className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                                            >
+                                                <Trash2 className="w-4 h-4 mr-2" />
+                                                Delete
+                                            </Button>
                                         </div>
                                     </div>
                                 </motion.div>
