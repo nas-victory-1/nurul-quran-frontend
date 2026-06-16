@@ -27,6 +27,18 @@ export const contestApi = api.injectEndpoints({
             invalidatesTags: ["Contest"],
         }),
 
+        updateContest: builder.mutation<
+            CreateContestResponse,
+            CreateContestRequest & { contestId: string }
+        >({
+            query: ({ contestId, ...data }) => ({
+                url: `/api/quiz/contests/${contestId}`,
+                method: "PUT",
+                body: data,
+            }),
+            invalidatesTags: ["Contest"],
+        }),
+
         createContest: builder.mutation<
             CreateContestResponse,
             CreateContestRequest
@@ -127,6 +139,7 @@ export const contestApi = api.injectEndpoints({
 export const {
     useGetContestsQuery,
     useDeleteContestMutation,
+    useUpdateContestMutation,
     useCreateContestMutation,
     useLazyGetContestDataQuery,
     useGetContestDataQuery,
