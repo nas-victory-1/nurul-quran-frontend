@@ -99,7 +99,6 @@ export default function QuestionDisplay() {
                 }).unwrap();
             }
         } catch (err) {
-            console.error("error", err);
             toastMessage({
                 header: "Sync issue",
                 message: "Could not clear the projector.",
